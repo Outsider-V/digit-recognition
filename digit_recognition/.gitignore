@@ -20,5 +20,21 @@ coverage.xml
 .mypy_cache
 .pytest_cache
 .hypothesis
+
+# Data and model files
 data/
+model/
 *.pt
+*.pth
+*.ckpt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

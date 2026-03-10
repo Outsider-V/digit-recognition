@@ -5,6 +5,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+import os
 
 class Net(nn.Module):
     def __init__(self):
@@ -56,17 +57,37 @@ def test(model, device, test_loader):
     print(f'Test set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset):.0f}%)')
 
 if __name__ == '__main__':
+    # Setup
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    dataset1 = datasets.MNIST('../data', train=True, download=True, transform=transform)
-    dataset2 = datasets.MNIST('../data', train=False, transform=transform)
-    train_loader = DataLoader(dataset1, batch_size=64, shuffle=True)
-    test_loader = DataLoader(dataset2, batch_size=1000, shuffle=False)
+    print(f"Using device: {device}")
+    
+    transform = transforms.Compose([
+        transforms.ToTensor(), 
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
+    
+    # Download datasets
+    print("Downloading MNIST dataset...")
+    dataset1 = datasets.MNIST('./data', train=True, download=True, transform=transform)
+    dataset2 = datasets.MNIST('./data', train=False, transform=transform)
+    
+    train_loader = DataLoader(dataset1, batch_size=64, shuffle=True, num_workers=0)
+    test_loader = DataLoader(dataset2, batch_size=1000, shuffle=False, num_workers=0)
+    
+    # Create model
     model = Net().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
     scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
-    for epoch in range(1, 15):
+    
+    # Train
+    print("Starting training...")
+    for epoch in range(1, 11):
         train(model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
         scheduler.step()
-    torch.save(model.state_dict(), 'mnist_cnn.pt')
+    
+    # Save model
+    print("Saving model...")
+    os.makedirs('model', exist_ok=True)
+    torch.save(model.state_dict(), 'model/mnist_cnn.pt')
+    print("Model saved to 'model/mnist_cnn.pt'")
